@@ -1,0 +1,183 @@
+<template>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">New Note</div>
+
+          <div class="card-body">
+            <form action="#" method="POST" @submit.prevent="store">
+              <div class="form-group">
+                <label for class="title">Title</label>
+                <input type="text" v-model="form.title" id="title" class="form-control" />
+
+                <div v-if="theErrors.title" class="mt-2 text-danger">{{theErrors.title[0]}}</div>
+              </div>
+
+              <div class="form-group">
+                <label for="subject">Subject</label>
+                <select v-model="form.subject" id="subject" class="form-control">
+                  <option
+                    v-for="subject in subjects"
+                    :key="subject.id"
+                    :value="subject.id"
+                  >{{ subject.nama }}</option>
+                </select>
+                <div v-if="theErrors.subject" class="mt-2 text-danger">{{theErrors.title[0]}}</div>
+              </div>
+
+              <div class="form-group">
+                <label for="description">Description</label>
+                <textarea v-model="form.description" id="description" rows="5" class="form-control"></textarea>
+              </div>
+              <div
+                v-if="theErrors.description"
+                class="mt-2 text-danger"
+              >{{theErrors.description[0]}}</div>
+
+              <button type="submit" class="btn btn-primary d-flex align-items-center">
+                <template v-if="loading">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    style="margin: auto; background: rgba(0, 0, 0, 0) none repeat scroll 0% 0%; display: block; shape-rendering: auto;"
+                    width="15px"
+                    height="15px"
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="xMidYMid"
+                  >
+                    <rect x="17.5" y="30" width="15" height="40" fill="#3e6d8d">
+                      <animate
+                        attributeName="y"
+                        repeatCount="indefinite"
+                        dur="1s"
+                        calcMode="spline"
+                        keyTimes="0;0.5;1"
+                        values="18;30;30"
+                        keySplines="0 0.5 0.5 1;0 0.5 0.5 1"
+                        begin="-0.2s"
+                      />
+                      <animate
+                        attributeName="height"
+                        repeatCount="indefinite"
+                        dur="1s"
+                        calcMode="spline"
+                        keyTimes="0;0.5;1"
+                        values="64;40;40"
+                        keySplines="0 0.5 0.5 1;0 0.5 0.5 1"
+                        begin="-0.2s"
+                      />
+                    </rect>
+                    <rect x="42.5" y="30" width="15" height="40" fill="#4b9bbe">
+                      <animate
+                        attributeName="y"
+                        repeatCount="indefinite"
+                        dur="1s"
+                        calcMode="spline"
+                        keyTimes="0;0.5;1"
+                        values="20.999999999999996;30;30"
+                        keySplines="0 0.5 0.5 1;0 0.5 0.5 1"
+                        begin="-0.1s"
+                      />
+                      <animate
+                        attributeName="height"
+                        repeatCount="indefinite"
+                        dur="1s"
+                        calcMode="spline"
+                        keyTimes="0;0.5;1"
+                        values="58.00000000000001;40;40"
+                        keySplines="0 0.5 0.5 1;0 0.5 0.5 1"
+                        begin="-0.1s"
+                      />
+                    </rect>
+                    <rect x="67.5" y="30" width="15" height="40" fill="#bababa">
+                      <animate
+                        attributeName="y"
+                        repeatCount="indefinite"
+                        dur="1s"
+                        calcMode="spline"
+                        keyTimes="0;0.5;1"
+                        values="20.999999999999996;30;30"
+                        keySplines="0 0.5 0.5 1;0 0.5 0.5 1"
+                      />
+                      <animate
+                        attributeName="height"
+                        repeatCount="indefinite"
+                        dur="1s"
+                        calcMode="spline"
+                        keyTimes="0;0.5;1"
+                        values="58.00000000000001;40;40"
+                        keySplines="0 0.5 0.5 1;0 0.5 0.5 1"
+                      />
+                    </rect>
+                    <!-- [ldio] generated by https://loading.io/ -->
+                  </svg>
+                </template>
+                Save
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      form: {
+        title: "",
+        description: "",
+        subject: "",
+      },
+
+      loading: false,
+      subjects: [],
+      theErrors: [],
+    };
+  },
+  mounted() {
+    this.getSubjects();
+  },
+
+  methods: {
+    async getSubjects() {
+      let response = await axios.get("/api/subjects");
+      if (response.status === 200) {
+        this.subjects = response.data;
+      }
+    },
+
+    async store() {
+      this.loading = true;
+      try {
+        let response = await axios.post(
+          "/api/notes/create-new-note",
+          this.form
+        );
+        if ((response.status = 200)) {
+          this.form.title = "";
+          this.form.description = "";
+          this.form.subject = "";
+          this.theErrors = [];
+          this.loading = false;
+
+          this.$toasted.show(response.data.message, {
+            type: "success",
+            duration: "1500",
+          });
+        }
+      } catch (e) {
+        this.loading = false;
+        this.$toasted.show("something went wrong", {
+          type: "error",
+          duration: "1500",
+        });
+        this.theErrors = e.response.data.errors;
+      }
+    },
+  },
+};
+</script>
